@@ -1,0 +1,16 @@
+[Unit]
+Description=Xiayuan train planner (12306 pinpiao backend)
+After=network.target
+
+[Service]
+Type=simple
+# 只监听本机回环：外部一律通过 nginx/xiayuan 同源代理访问
+Environment=HOST=127.0.0.1
+Environment=PORT=3721
+WorkingDirectory=/opt/xiayuan/train-planner
+ExecStart=/opt/xiayuan/node/bin/node /opt/xiayuan/train-planner/server.js
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
