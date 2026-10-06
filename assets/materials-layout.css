@@ -1,0 +1,39 @@
+.materials-section { background:rgba(255,253,247,.96) !important; background-image:none !important; }
+.materials-section .materials-group { background:rgba(255,253,247,.88) !important; background-image:none !important; }
+.materials-section .materials-summary { background:#e8eef0 !important; background-image:none !important; }
+.materials-section .materials-note { background:#fdeaea !important; background-image:none !important; }
+.materials-section { padding: 24px 28px 22px !important; overflow: visible !important; }
+.materials-title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; padding-bottom:12px; border-bottom:1px solid #cfc29f; }
+.materials-title-row h2 { margin:0 !important; padding:0 !important; border:0 !important; font-size:20px !important; }
+.materials-kicker { margin:4px 0 0 !important; font-size:13px !important; color:var(--text-light) !important; }
+.materials-date { flex:none; padding:4px 10px; border-radius:999px; background:#e5ead5; color:var(--forest-mid); font-size:12px; font-weight:700; white-space:nowrap; }
+.materials-summary { margin:16px 0 14px !important; padding:15px 18px !important; }
+.materials-summary-main { display:flex; align-items:flex-start; gap:9px; color:var(--text-dark); font-size:15px; line-height:1.65; }
+.materials-summary-icon { flex:none; font-size:18px; line-height:1.5; }
+.materials-summary p { margin:4px 0 8px !important; font-size:13px !important; line-height:1.65 !important; }
+.materials-links { display:flex; align-items:center; flex-wrap:wrap; gap:7px; font-size:12px; }
+.materials-links > span { color:var(--text-light); }
+.materials-links a { display:inline-block; padding:3px 9px; border:1px solid #bfd0c1; border-radius:999px; background:rgba(255,253,247,.6); color:var(--forest-mid); text-decoration:none; }
+.materials-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:14px; }
+.materials-group { min-width:0; padding:16px 17px 13px; border:1px solid #d8d0ba; border-radius:16px; background:rgba(255,253,247,.64); box-shadow:2px 3px 0 rgba(146,118,84,.06); }
+.materials-group--common { grid-column:1 / -1; }
+.materials-group-head { display:flex; align-items:center; gap:10px; padding-bottom:10px; border-bottom:1px solid #e0d8c5; }
+.materials-tag { flex:none; padding:4px 9px; border-radius:8px; background:var(--forest-mid); color:var(--white); font-size:12px; font-weight:700; letter-spacing:.3px; }
+.materials-group h3 { margin:0 !important; color:var(--forest-deep) !important; font-size:17px !important; line-height:1.35 !important; }
+.materials-group-head p { margin:2px 0 0 !important; color:var(--text-light) !important; font-size:12px !important; line-height:1.4 !important; }
+.materials-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 22px; margin:9px 0 0 !important; }
+.materials-group:not(.materials-group--common) .materials-list { grid-template-columns:1fr; }
+.materials-list li { display:block !important; min-width:0; margin:0 !important; padding:8px 0; border-bottom:1px dashed #e1d8c2; font-size:13.5px !important; line-height:1.65 !important; }
+.materials-list li:last-child { border-bottom:0; }
+.materials-list li::before { content:"✓" !important; display:inline-block; width:18px; height:18px; margin:2px 8px 0 0; border-radius:50%; background:#e5ead5; color:var(--forest-mid); font-size:12px; font-weight:700; line-height:18px; text-align:center; vertical-align:top; }
+.materials-list a { color:var(--forest-mid); text-decoration:underline; text-underline-offset:2px; }
+.materials-source { display:block; margin-top:4px; color:var(--text-light); font-size:12px; line-height:1.5; }
+.materials-note { margin:14px 0 0 !important; padding:11px 15px !important; font-size:13px !important; line-height:1.6 !important; }
+@media (max-width:720px) {
+  .materials-section { padding:19px 16px 18px !important; }
+  .materials-title-row { display:block; }
+  .materials-date { display:inline-block; margin-top:8px; }
+  .materials-grid { grid-template-columns:1fr; }
+  .materials-group--common { grid-column:auto; }
+  .materials-list, .materials-group:not(.materials-group--common) .materials-list { grid-template-columns:1fr; }
+}

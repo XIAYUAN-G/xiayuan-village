@@ -1,0 +1,297 @@
+:root {
+  --paper-forest: #405d46;
+  --paper-forest-deep: #304934;
+  --paper-leaf: #718b5b;
+  --paper-wood: #80552f;
+  --paper-wood-light: #b4864f;
+  --paper: #fffdf4;
+  --paper-soft: #fbf7e9;
+  --paper-line: #cdbf98;
+  --paper-text: #465044;
+  --paper-muted: #6f796b;
+}
+
+main.paper-universal-main,
+main.xmu-paper-main {
+  width: min(1100px, 100%) !important;
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+  padding: 16px 20px 112px !important;
+  background: transparent !important;
+  color: var(--paper-text) !important;
+  font: 15px/1.78 -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important;
+}
+
+main.paper-universal-main > nav,
+main.xmu-paper-main > nav,
+main.paper-universal-main .page-nav,
+main.xmu-paper-main .page-nav {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 20 !important;
+  overflow-x: auto !important;
+  margin: 0 0 16px !important;
+  padding: 0 18px !important;
+  background: rgba(255,253,247,.97) !important;
+  border-bottom: 1px solid var(--paper-line) !important;
+  box-shadow: 0 3px 12px rgba(76,72,46,.08) !important;
+}
+
+/* 快捷入口是内容的一部分，不固定在视口顶部，避免手机端下滑时遮住正文。 */
+main.paper-universal-main .quick,
+main.xmu-paper-main .quick {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  overflow: visible !important;
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+.paper-universal-section,
+.xmu-paper-section {
+  margin: 0 0 15px !important;
+  padding: 18px 20px !important;
+  overflow: visible !important;
+  color: var(--paper-text) !important;
+  background-color: #fffaf0 !important;
+  background-image: repeating-linear-gradient(90deg, rgba(126,102,63,.022) 0 1px, transparent 1px 8px), linear-gradient(180deg, rgba(255,253,244,.97), rgba(249,241,223,.96)) !important;
+  border: 1px solid rgba(132,108,70,.28) !important;
+  border-top: 2px solid rgba(104,127,83,.76) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.88), inset 0 0 0 1px rgba(151,132,83,.06), 0 4px 12px rgba(76,72,46,.08) !important;
+}
+
+.paper-universal-heading,
+.xmu-paper-heading,
+.paper-universal-section > h2,
+.xmu-paper-section > h2 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 0 10px !important;
+  padding: 0 0 10px !important;
+  color: var(--paper-forest-deep) !important;
+  border: 0 !important;
+  border-bottom: 1px solid #c8bd98 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 19px !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+}
+
+.paper-universal-heading::before,
+.paper-universal-heading::after,
+.xmu-paper-heading::before,
+.xmu-paper-heading::after {
+  display: none !important;
+  content: none !important;
+}
+
+.paper-universal-index,
+.xmu-paper-number,
+.section-no,
+.section-number,
+.section-index,
+.paper-universal-heading .index,
+.xmu-paper-heading .index {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 37px !important;
+  min-height: 28px !important;
+  padding: 2px 8px !important;
+  color: #fff2c9 !important;
+  font: 700 12px/1 -apple-system, "PingFang SC", sans-serif !important;
+  text-shadow: none !important;
+  background: linear-gradient(145deg, #9b7042, #684523) !important;
+  border: 1px solid #604021 !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 1px rgba(255,239,194,.36), 0 2px 0 rgba(73,43,21,.2) !important;
+}
+
+.paper-universal-section h3,
+.xmu-paper-section h3,
+main.paper-universal-main h3,
+main.xmu-paper-main h3 {
+  margin: 16px 0 7px !important;
+  color: #536f4d !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+
+.paper-universal-section p,
+.paper-universal-section li,
+.xmu-paper-section p,
+.xmu-paper-section li,
+main.paper-universal-main p,
+main.paper-universal-main li,
+main.xmu-paper-main p,
+main.xmu-paper-main li {
+  font-size: 15px !important;
+  line-height: 1.78 !important;
+}
+
+.paper-universal-box,
+.xmu-paper-subcard,
+.paper-universal-section > .card,
+.paper-universal-section > .panel,
+.paper-universal-section > .info-card,
+.paper-universal-section > .guide-card,
+.paper-universal-section > .notice,
+.paper-universal-section > .callout,
+.paper-universal-section > .tip,
+.paper-universal-section > .alert {
+  margin: 12px 0 !important;
+  padding: 13px 14px !important;
+  color: var(--paper-text) !important;
+  background: #f8f0d9 !important;
+  border: 1px solid #d9ceb0 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+/* 保研卡片顶部留出编号牌空间，避免统一内容框内边距覆盖原有留白。 */
+.paper-universal-box.route-item,
+.paper-universal-box.card,
+.paper-universal-box.timeline-step,
+.paper-universal-box.system-step {
+  padding-top: 48px !important;
+}
+.paper-universal-box.card { padding-top: 50px !important; }
+.paper-universal-box.system-step { padding-top: 49px !important; }
+
+/* 地址提示独占一行，避免统一 note 样式的上下内边距压到地址正文。 */
+.addr-box .note,
+.xmu-paper-section .addr-box .note,
+.paper-universal-section .addr-box .note {
+  display: block !important;
+  margin-top: 8px !important;
+  line-height: 1.6 !important;
+}
+
+.paper-universal-note,
+.paper-universal-box.notice,
+.paper-universal-box.tip,
+.paper-universal-box.callout,
+.paper-universal-box.alert,
+.paper-universal-section .notice,
+.paper-universal-section .tip,
+.paper-universal-section .callout,
+.paper-universal-section .alert {
+  padding: 11px 14px !important;
+  color: #655b42 !important;
+  background: #f8f0d9 !important;
+  border: 1px solid #d9ceb0 !important;
+  border-left: 4px solid var(--paper-leaf) !important;
+  border-radius: 0 10px 10px 0 !important;
+  box-shadow: none !important;
+}
+
+.paper-universal-section table,
+.xmu-paper-section table,
+main.paper-universal-main table,
+main.xmu-paper-main table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: hidden !important;
+  background: var(--paper) !important;
+  border: 1px solid #d9ceb0 !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+}
+
+.paper-universal-section th,
+.paper-universal-section td,
+.xmu-paper-section th,
+.xmu-paper-section td,
+main.paper-universal-main th,
+main.paper-universal-main td,
+main.xmu-paper-main th,
+main.xmu-paper-main td {
+  padding: 10px 11px !important;
+  text-align: left !important;
+  vertical-align: top !important;
+  border-bottom: 1px solid #e4dbc3 !important;
+}
+
+.paper-universal-section th,
+.xmu-paper-section th,
+main.paper-universal-main th,
+main.xmu-paper-main th {
+  color: var(--paper-forest-deep) !important;
+  background: #e5ead5 !important;
+  font-weight: 700 !important;
+}
+
+.paper-universal-section tr:nth-child(even) td,
+.xmu-paper-section tr:nth-child(even) td,
+main.paper-universal-main tr:nth-child(even) td,
+main.xmu-paper-main tr:nth-child(even) td {
+  background: var(--paper-soft) !important;
+}
+
+.paper-universal-main a,
+.xmu-paper-main a { color: #55734f !important; }
+
+.paper-universal-main .tag,
+.paper-universal-main .badge,
+.paper-universal-main .chip,
+.xmu-paper-main .tag,
+.xmu-paper-main .badge,
+.xmu-paper-main .chip {
+  color: #5d6e50 !important;
+  background: #eef0df !important;
+  border: 1px solid #cbd4af !important;
+  border-radius: 999px !important;
+}
+
+@media (max-width: 680px) {
+  main.paper-universal-main,
+  main.xmu-paper-main { padding: 13px 12px 104px !important; }
+  .paper-universal-section,
+  .xmu-paper-section { margin-bottom: 12px !important; padding: 15px 13px !important; border-radius: 14px !important; }
+  .paper-universal-heading,
+  .xmu-paper-heading { gap: 8px !important; font-size: 17px !important; }
+  .paper-universal-index,
+  .xmu-paper-number,
+  .section-no,
+  .section-number,
+  .section-index { min-width: 32px !important; min-height: 25px !important; font-size: 11px !important; }
+  .paper-universal-section p,
+  .paper-universal-section li,
+  .xmu-paper-section p,
+  .xmu-paper-section li,
+  main.paper-universal-main p,
+  main.paper-universal-main li,
+  main.xmu-paper-main p,
+  main.xmu-paper-main li { font-size: 13px !important; }
+  .paper-universal-section table,
+  .xmu-paper-section table,
+  main.paper-universal-main table,
+  main.xmu-paper-main table { font-size: 12px !important; }
+
+  main.paper-universal-main .quick,
+  main.xmu-paper-main .quick { gap: 8px !important; }
+  main.paper-universal-main .quick a,
+  main.xmu-paper-main .quick a { min-height: 0 !important; padding: 10px 12px !important; }
+  main.paper-universal-main .quick span,
+  main.xmu-paper-main .quick span { font-size: 14px !important; line-height: 1.4 !important; }
+  main.paper-universal-main .quick small,
+  main.xmu-paper-main .quick small { font-size: 11px !important; line-height: 1.45 !important; }
+  .paper-universal-section th,
+  .paper-universal-section td,
+  .xmu-paper-section th,
+  .xmu-paper-section td,
+  main.paper-universal-main th,
+  main.paper-universal-main td,
+  main.xmu-paper-main th,
+  main.xmu-paper-main td { padding: 8px !important; }
+}

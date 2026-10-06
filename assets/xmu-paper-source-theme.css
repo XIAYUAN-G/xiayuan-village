@@ -1,0 +1,328 @@
+:root {
+  --xmu-paper-forest:#405d46;
+  --xmu-paper-forest-deep:#304934;
+  --xmu-paper-leaf:#718b5b;
+  --xmu-paper-wood:#80552f;
+  --xmu-paper-line:#cdbf98;
+  --xmu-paper-text:#465044;
+  --xmu-paper-muted:#6f796b;
+  --xmu-paper:#fffdf4;
+}
+
+html { scroll-behavior:smooth; scroll-padding-top:72px; }
+body {
+  min-height:100vh !important;
+  color:var(--xmu-paper-text) !important;
+  font:15px/1.78 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif !important;
+  background-color:#505653 !important;
+  background-image:linear-gradient(rgba(54,60,58,.05),rgba(54,60,58,.05)),url("../assets/paper-academic-roadmap-v1.webp") !important;
+  background-position:center !important;
+  background-size:cover !important;
+  background-repeat:no-repeat !important;
+  background-attachment:fixed !important;
+}
+
+body::before { opacity:.035 !important; }
+
+header,
+body > .hero,
+body > .paper-hero {
+  min-height:106px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:20px 24px !important;
+  background-color:#505653 !important;
+  background-image:linear-gradient(rgba(54,60,58,.05),rgba(54,60,58,.05)),url("../assets/paper-academic-roadmap-v1.webp") !important;
+  background-position:center !important;
+  background-size:cover !important;
+  background-repeat:no-repeat !important;
+  background-attachment:fixed !important;
+  box-shadow:0 2px 9px rgba(41,63,37,.14) !important;
+}
+
+header::after,
+body > .hero::after,
+body > .paper-hero::after { display:none !important; }
+
+header .header-inner,
+header > div { width:100% !important; max-width:100% !important; text-align:center !important; }
+
+header h1,
+body > .hero h1,
+body > .paper-hero h1 {
+  display:inline-block !important;
+  min-width:240px !important;
+  max-width:min(86vw,760px) !important;
+  margin:0 auto !important;
+  padding:11px 28px 12px !important;
+  color:#fff0c4 !important;
+  font-family:Georgia,"Songti SC","STSong",serif !important;
+  font-size:clamp(22px,2.6vw,26px) !important;
+  font-weight:700 !important;
+  line-height:1.25 !important;
+  letter-spacing:.7px !important;
+  text-align:center !important;
+  text-shadow:0 2px rgba(64,39,21,.66) !important;
+  background:radial-gradient(ellipse 16px 4px at 18% 33%,rgba(69,42,22,.26) 0 24%,transparent 26%),radial-gradient(ellipse 18px 5px at 78% 70%,rgba(69,42,22,.2) 0 22%,transparent 25%),repeating-linear-gradient(174deg,transparent 0 11px,rgba(73,43,22,.16) 12px 13px,transparent 14px 25px),linear-gradient(100deg,#684625 0%,#8d5e33 26%,#b78a52 52%,#80522d 78%,#644324 100%) !important;
+  border:1px solid #5c3b23 !important;
+  border-radius:4px !important;
+  box-shadow:inset 0 1px rgba(246,221,169,.42),inset 0 -3px rgba(56,35,20,.43),0 4px 0 rgba(59,39,24,.52),0 8px 14px rgba(35,53,31,.22) !important;
+}
+
+main {
+  width:min(1100px,calc(100% - 40px)) !important;
+  max-width:1100px !important;
+  margin:0 auto !important;
+  padding:16px 20px 112px !important;
+  color:var(--xmu-paper-text) !important;
+  background:transparent !important;
+}
+
+main > .tab-panel,
+main > .tabs,
+main > .grid,
+main > .layout,
+main > .content,
+main > .container { background:transparent !important; }
+
+main > section,
+main > article,
+main > aside,
+main .section-card,
+main .exam-section,
+main .info-section,
+main .finder,
+main .toolbar,
+main .audit-banner,
+main .policy-intro-section,
+main .calculator-section {
+  margin:0 0 15px !important;
+  padding:18px 20px !important;
+  color:var(--xmu-paper-text) !important;
+  background-color:#fffaf0 !important;
+  background-image:repeating-linear-gradient(90deg,rgba(126,102,63,.022) 0 1px,transparent 1px 8px),linear-gradient(180deg,rgba(255,253,244,.97),rgba(249,241,223,.96)) !important;
+  border:1px solid rgba(132,108,70,.28) !important;
+  border-top:2px solid rgba(104,127,83,.76) !important;
+  border-radius:18px !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.88),inset 0 0 0 1px rgba(151,132,83,.06),0 4px 12px rgba(76,72,46,.08) !important;
+  overflow:visible !important;
+}
+
+main .grid,
+main .stats-grid,
+main .exam-grid,
+main .timeline-box,
+main .prep-grid { background:transparent !important; }
+
+main .card,
+main .stat-card,
+main .timeline-item,
+main .prep-card,
+main .exam-card,
+main .policy-result,
+main .project-card,
+main .compare-item,
+main .flow-box,
+main .point-card,
+main .entry-card,
+main .info-card {
+  color:var(--xmu-paper-text) !important;
+  background-color:#fffdf5 !important;
+  background-image:repeating-linear-gradient(0deg,rgba(126,102,63,.025) 0 1px,transparent 1px 5px),linear-gradient(180deg,rgba(255,254,247,.98),rgba(250,244,231,.96)) !important;
+  border:1px solid rgba(151,128,88,.28) !important;
+  border-radius:13px !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.9),0 2px 7px rgba(76,72,46,.065) !important;
+}
+
+main h2 {
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  margin:0 0 10px !important;
+  padding:0 0 10px !important;
+  color:var(--xmu-paper-forest-deep) !important;
+  border:0 !important;
+  border-bottom:1px solid #c8bd98 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  font-size:19px !important;
+  line-height:1.4 !important;
+  text-align:left !important;
+}
+
+.xmu-paper-number {
+  display:inline-flex !important;
+  flex:0 0 auto !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-width:37px !important;
+  min-height:28px !important;
+  padding:2px 8px !important;
+  color:#fff2c9 !important;
+  font:700 12px/1 -apple-system,"PingFang SC",sans-serif !important;
+  text-shadow:none !important;
+  background:linear-gradient(145deg,#9b7042,#684523) !important;
+  border:1px solid #604021 !important;
+  border-radius:4px !important;
+  box-shadow:inset 0 1px rgba(255,239,194,.36),0 2px 0 rgba(73,43,21,.2) !important;
+}
+
+main h3 { margin:16px 0 7px !important; color:#536f4d !important; font-size:15px !important; line-height:1.5 !important; }
+main p, main li, main dd, main dt { font-size:15px !important; line-height:1.78 !important; }
+main a { color:#55734f !important; }
+
+.xmu-major-tab-icon {
+  display:inline-block !important;
+  margin-right:6px !important;
+  font-size:14px !important;
+  line-height:1 !important;
+  vertical-align:-1px !important;
+}
+
+main .callout,
+main .note,
+main .notice,
+main .tip,
+main .alert,
+main .warning,
+main .flow-note {
+  color:#655b42 !important;
+  background:#f8f0d9 !important;
+  border-color:#d9ceb0 !important;
+  border-left:4px solid var(--xmu-paper-leaf) !important;
+  border-radius:0 10px 10px 0 !important;
+  box-shadow:none !important;
+}
+
+main table,
+main .info-table,
+main .policy-table { background:var(--xmu-paper) !important; border-color:#d9ceb0 !important; }
+main th { color:var(--xmu-paper-forest-deep) !important; background:#e5ead5 !important; }
+main td { background:transparent !important; border-bottom-color:#e4dbc3 !important; }
+main .table-wrap,
+main .table-container,
+main .info-table-wrap,
+main .policy-table-wrap,
+main .transport-table-wrap { max-width:100% !important; overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; }
+
+@media (max-width:680px) {
+  html, body { width:100%; min-width:0; max-width:100%; overflow-x:hidden; overflow-y:auto; }
+  header, body > .hero, body > .paper-hero { min-height:84px !important; padding:14px !important; }
+  header h1, body > .hero h1, body > .paper-hero h1 { min-width:0 !important; padding:9px 16px 10px !important; font-size:22px !important; }
+  main { width:calc(100% - 24px) !important; padding:13px 12px 112px !important; }
+  main > section, main > article, main > aside, main .section-card, main .exam-section, main .info-section, main .finder, main .toolbar { margin-bottom:12px !important; padding:15px 13px !important; border-radius:14px !important; }
+  main h2 { gap:8px !important; font-size:17px !important; }
+  .xmu-paper-number { min-width:32px !important; min-height:25px !important; font-size:11px !important; }
+  main h3 { margin-top:19px !important; font-size:15px !important; }
+  main p, main li, main dd, main dt { font-size:13px !important; line-height:1.7 !important; }
+  main .grid, main .stats-grid, main .exam-grid, main .timeline-box, main .prep-grid { grid-template-columns:1fr !important; }
+  main table { min-width:650px !important; font-size:12px !important; }
+  main th, main td { padding:8px !important; }
+  nav.tabs, nav.tabs .nav-inner, .tabs, .nav-inner { max-width:100% !important; flex-wrap:nowrap !important; overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important; }
+  nav.tabs::-webkit-scrollbar, .tabs::-webkit-scrollbar { display:none; }
+  nav.tabs button, .tabs button, .nav-inner button { flex:0 0 auto !important; white-space:nowrap !important; }
+}
+
+/* 五个移动端源页面的最终滚动层：正文纵向滚动，只有确实过宽的表格横向滚动。 */
+@media (max-width:768px) {
+  html, body {
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    height:auto !important;
+    min-height:100% !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    overscroll-behavior-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  body { touch-action:pan-y !important; }
+  header { max-width:100% !important; min-width:0 !important; }
+  main {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:14px 12px 124px !important;
+    overflow:visible !important;
+  }
+
+  nav.tabs, .tabs {
+    max-width:100% !important;
+    min-width:0 !important;
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    touch-action:pan-x !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  .layout, .grid, .results, .exam-grid, .stats-grid, .compare-grid,
+  .timeline-box, .prep-grid, .guide-grid, #entryGrid, #projectGrid {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:visible !important;
+    grid-template-columns:1fr !important;
+  }
+
+  .section-card, .exam-section, .info-section, .finder, .toolbar,
+  .audit-banner, .card, .stat-card, .prep-card, .exam-card,
+  .compare-item, .flow-box, .point-card {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:visible !important;
+  }
+
+  .table-wrap, .table-container, .info-table-wrap, .policy-table-wrap,
+  .quota-table-wrap, .transport-table-wrap, .xmu-mobile-scroll-wrap {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    touch-action:pan-x !important;
+    overscroll-behavior-x:contain !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  .table-wrap table, .table-container table, .info-table-wrap table,
+  .policy-table-wrap table, .quota-table-wrap table,
+  .transport-table-wrap table, .xmu-mobile-scroll-wrap table {
+    width:max-content !important;
+    min-width:620px !important;
+    max-width:none !important;
+  }
+
+  /* 快递点页面：地图和点位列表改为上下排列，列表不再被 580px 高度截断。 */
+  main .layout { display:block !important; }
+  main .layout > #map {
+    width:100% !important;
+    max-width:100% !important;
+    height:300px !important;
+    touch-action:pan-x pan-y !important;
+  }
+  main .layout > .sidebar {
+    width:100% !important;
+    max-width:100% !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  .toolbar { position:static !important; top:auto !important; }
+
+  /* 普通文字强制在卡片内换行，避免长地址、长条目把内容撑出边界。 */
+  main p, main li, main dd, main dt, main td, main th,
+  main h2, main h3, main .desc, main .callout, main .note,
+  main .addr-box, main .tips-box, main .ti-content, main .prep-card,
+  main .stat-card, main .flow-box {
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow-wrap:anywhere !important;
+    word-break:break-word !important;
+  }
+}
