@@ -1,0 +1,2 @@
+# 只有启用腾讯云 COS 直传模式时需要安装；本地预览模式仍只依赖 Python 标准库。
+cos-python-sdk-v5
