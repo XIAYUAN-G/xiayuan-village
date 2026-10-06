@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/result/result",
+    "pages/village/village"
+  ],
+  "window": {
+    "navigationBarTitleText": "厦园新手村",
+    "navigationBarBackgroundColor": "#2f513d",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5efdf",
+    "backgroundTextStyle": "light"
+  },
+  "sitemapLocation": "sitemap.json"
+}

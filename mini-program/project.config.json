@@ -1,0 +1,16 @@
+{
+  "description": "厦园新手村·新生入园生存图鉴",
+  "compileType": "miniprogram",
+  "libVersion": "3.8.0",
+  "appid": "touristappid",
+  "projectname": "xiayuan-survival-atlas",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "urlCheck": false,
+    "compileHotReLoad": true
+  },
+  "packOptions": {
+    "ignore": []
+  }
+}

@@ -1,0 +1,35 @@
+<view class="page-shell">
+  <view class="hero">
+    <text class="top-kicker">厦园新手村 · 新生限定活动</text>
+    <view class="hero-title">新生入园生存图鉴</view>
+    <view class="hero-desc">测出你的开学第一坑，解锁适合你的厦大新手攻略。</view>
+  </view>
+
+  <block wx:if="{{mode === 'intro'}}">
+    <view class="panel">
+      <view class="mascot-wrap"><view class="sprite hero-sprite" style="background-position: 100% 33.333333%;"></view></view>
+      <view class="panel-title">你是哪种厦大新生？</view>
+      <view class="panel-desc">8 道题，30 秒，看看你会以什么姿势进入厦大新手村。结果只是趣味画像，但推荐的攻略真的可以用。</view>
+      <button class="primary-btn" bindtap="startQuiz">开始测试</button>
+      <view class="mini-note">不需要注册，不需要转发才能解锁；具体校内信息请以官方通知为准。</view>
+    </view>
+  </block>
+
+  <block wx:if="{{mode === 'quiz'}}">
+    <view class="panel">
+      <view class="quiz-meta"><text>问题 {{current + 1}} / 8</text><text>{{question.dimension}}</text></view>
+      <view class="progress"><view class="progress-fill" style="width: {{progress}}%;"></view></view>
+      <view class="question-kicker">{{question.kicker}}</view>
+      <view class="question-title">{{question.prompt}}</view>
+      <button class="option" wx:for="{{question.options}}" wx:key="index" data-value="{{item[1]}}" bindtap="choose">
+        <text class="option-letter">{{index === 0 ? 'A' : index === 1 ? 'B' : index === 2 ? 'C' : 'D'}}</text>{{item[0]}}
+      </button>
+      <view class="quiz-actions">
+        <button class="text-btn" bindtap="previous">← 返回上一题</button>
+        <button class="text-btn" bindtap="restart">重新开始</button>
+      </view>
+    </view>
+  </block>
+
+  <view class="footer-note">厦园新手村 · 个人整理，非厦门大学官方平台</view>
+</view>

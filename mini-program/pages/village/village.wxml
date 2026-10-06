@@ -1,0 +1,13 @@
+<block wx:if="{{ready}}">
+  <web-view src="{{url}}"></web-view>
+</block>
+<block wx:else>
+  <view class="page-shell">
+    <view class="panel empty-panel">
+      <view class="empty-icon">🗺️</view>
+      <view class="empty-title">新手村入口待配置</view>
+      <view class="empty-desc">活动小程序已经准备好。把线上 HTTPS 网站地址填入 mini-program/utils/config.js，并完成微信业务域名配置后，就可以从结果页跳入完整的新手村。</view>
+      <button class="primary-btn" bindtap="showConfigHint">查看配置提示</button>
+    </view>
+  </view>
+</block>

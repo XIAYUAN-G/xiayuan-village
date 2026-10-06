@@ -1,0 +1,1 @@
+.result-badge { padding: 6rpx 16rpx; border-radius: 999rpx; font-size: 21rpx; font-weight: 800; }

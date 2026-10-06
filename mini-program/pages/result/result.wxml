@@ -1,0 +1,21 @@
+<view class="page-shell">
+  <view class="panel result-head">
+    <view class="mascot-wrap"><view class="sprite" style="{{spriteStyle}}"></view></view>
+    <view class="top-kicker result-badge">你的新生类型</view>
+    <view class="result-title">{{result.title}}</view>
+    <view class="result-tagline">{{result.tagline}}</view>
+    <view class="result-box"><text class="result-box-label">你的开学第一坑：</text>{{result.risk}}</view>
+    <view class="result-box mission"><text class="result-box-label">新手村建议：</text>{{result.mission}}</view>
+    <view class="tag-row"><text class="tag" wx:for="{{result.tags}}" wx:key="index">{{item}}</text></view>
+  </view>
+
+  <view class="panel">
+    <button class="primary-btn" bindtap="openVillage">去看「{{result.guide}}」</button>
+    <button class="secondary-btn" open-type="share">转发给同学</button>
+    <button class="secondary-btn" bindtap="copyShare">复制分享文案</button>
+    <button class="text-btn" bindtap="restart">重新测试</button>
+    <view class="mini-note">分享后，朋友点开会直接进入你的结果类型；网站攻略需要先配置线上 HTTPS 地址。</view>
+  </view>
+
+  <view class="footer-note">趣味测试，不代表真实能力或评奖评优结果。校内政策以官方通知为准。</view>
+</view>
