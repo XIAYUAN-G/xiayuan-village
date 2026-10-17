@@ -11,7 +11,7 @@
    public      false = 需要通行码解锁（进阶内容）
 */
 window.XMU_NAV = {
-  version: '20260929-plan-latest-sync-v4',
+  version: '20261018-notices-v2',
   overviewId: 'page-overview',
   /* 侧边栏当前保留课表 / 校园资料；美食资讯暂时隐藏，页面文件保留。
      具体攻略栏目不再出现在侧栏，统一从「校园资料」（原全局栏目总览）进入。 */
