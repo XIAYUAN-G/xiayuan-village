@@ -1353,11 +1353,21 @@ def notice_prefs_save(user_id: int, prefs: dict) -> str:
 PROFILE_CAMPUSES = ("未设置校区", "思明校区", "翔安校区", "漳州校区")
 
 
+# 编辑资料可选学院清单（与通知栏目名一致，用于「通知」板块自动匹配）
+PROFILE_COLLEGES = (
+    "中文系", "历史学系", "新闻传播学院", "艺术学院", "经济学院", "法学院",
+    "公共事务学院", "马克思主义学院", "数学科学学院", "化学化工学院", "材料学院",
+    "生命科学学院", "环境与生态学院", "信息学院", "电子科学与技术学院",
+    "航空航天学院", "能源学院", "公共卫生学院", "医学院", "建筑与土木工程学院",
+)
+
+
 def clean_profile(payload: dict) -> dict:
     nickname = str(payload.get("nickname", "")).strip()[:24] or "厦园同学"
     campus = payload.get("campus") if payload.get("campus") in PROFILE_CAMPUSES else "未设置校区"
     grade = str(payload.get("grade", "")).strip()[:12] or "未设置年级"
-    return {"nickname": nickname, "campus": campus, "grade": grade}
+    college = payload.get("college") if payload.get("college") in PROFILE_COLLEGES else "未设置学院"
+    return {"nickname": nickname, "campus": campus, "grade": grade, "college": college}
 
 
 def account_save_profile(user_id: int, data: dict):
