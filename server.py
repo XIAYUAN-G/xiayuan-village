@@ -1102,13 +1102,56 @@ def notice_clean_title(title: str) -> str:
     return title.strip()
 
 
+_DATE_CANDIDATE = re.compile(
+    r"(?:20\d{2})[-/.年]\s*\d{1,2}(?:[-/.月]\s*\d{1,2})?日?|(?<![\d-])\d{1,2}-\d{1,2}(?![\d-])"
+)
+
+
+def notice_date_candidate(raw: str) -> str:
+    """把单个日期候选片段解析为标准日期。纯年月片段只返回年月，
+    避免把「2026/10」的 10 误当成 10 日。月日+年的组合格式交给整窗兜底。"""
+    raw = raw.strip()
+    full = re.fullmatch(r"(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})日?", raw)
+    chinese = re.fullmatch(r"(20\d{2})年(\d{1,2})月(\d{1,2})日?", raw)
+    match = full or chinese
+    if not match:
+        year_month = re.fullmatch(r"(20\d{2})[-/.年](\d{1,2})月?", raw)
+        if not year_month:
+            return ""
+        y, m = int(year_month.group(1)), int(year_month.group(2))
+        if not (1 <= m <= 12):
+            return ""
+        return f"{y:04d}-{m:02d}"
+    y, m = int(match.group(1)), int(match.group(2))
+    if not (1 <= m <= 12):
+        return ""
+    d = int(match.group(3))
+    if not (1 <= d <= 31):
+        return ""
+    return f"{y:04d}-{m:02d}-{d:02d}"
+
+
 def notice_date_near(page: str, start: int, end: int) -> str:
-    """在锚点附近（前后 350 字符优先，再退到 600）找日期，避免配到相邻条目的日期。"""
-    near_after = page[end:end + 350]
-    near_before = page[max(0, start - 350):start]
-    wide_after = page[end:end + 600]
-    wide_before = page[max(0, start - 600):start]
-    for chunk in (near_after, near_before, wide_after, wide_before, page[start:end]):
+    """在锚点附近找日期：前窗/后窗**同权**，取距离锚点最近的候选。
+    修复「日期在标题前面」的模板（如教务处）错配到下一条日期的问题。"""
+    def nearest(lo: int, hi: int):
+        best = None
+        for match in _DATE_CANDIDATE.finditer(page, lo, hi):
+            parsed = notice_date_candidate(match.group(0))
+            if not parsed:
+                continue
+            dist = (start - match.end()) if match.end() <= start else (match.start() - end)
+            if best is None or dist < best[0]:
+                best = (dist, parsed)
+        return best
+    for lo, hi in ((max(0, start - 350), end + 350), (max(0, start - 600), end + 600)):
+        best = nearest(lo, hi)
+        if best:
+            return best[1]
+    # 兜底：整窗合并解析（兼容「日 + 年月」跨标签两段式写法）
+    for chunk in (page[end:end + 350], page[max(0, start - 350):start],
+                  page[end:end + 600], page[max(0, start - 600):start],
+                  page[start:end]):
         parsed = notice_parse_date(re.sub(r"<[^>]+>", " ", chunk))
         if parsed:
             return parsed
