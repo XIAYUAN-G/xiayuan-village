@@ -9,6 +9,7 @@ import os
 import re
 import base64
 import binascii
+import datetime as _datetime
 import getpass
 import hashlib
 import mimetypes
@@ -1031,28 +1032,30 @@ def notice_parse_date(text: str) -> str:
     full = re.search(r"(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)", text)
     if full:
         parsed = _norm(full.group(1), full.group(2), full.group(3))
-        if parsed:
+        if parsed and not notice_date_in_future(parsed):
             return parsed
     chinese = re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日", text)
     if chinese:
         parsed = _norm(chinese.group(1), chinese.group(2), chinese.group(3))
-        if parsed:
+        if parsed and not notice_date_in_future(parsed):
             return parsed
     month_day = re.search(r"(?<![\d-])(\d{1,2}-\d{1,2})(?![\d-])", text)
     year = re.search(r"(?<![\d-])(20\d{2})(?![\d-])", text)
     if month_day and year:
         parts = month_day.group(1).split("-")
         parsed = _norm(year.group(1), parts[0], parts[1])
-        if parsed:
+        if parsed and not notice_date_in_future(parsed):
             return parsed
     # 年-月兜底：年月分隔符支持 - / . ，且月份必须合法（挡掉「2026-2027」这类年份区间）
     year_month = re.search(r"(20\d{2})[-/.](\d{1,2})(?![\d.])", text)
     if year_month:
         base = _norm(year_month.group(1), year_month.group(2))
-        if base:
+        if base and not notice_date_in_future(base):
             day = re.search(r"(?<![\d-])([0-3]?\d)(?![\d-])", text)
             if day and 1 <= int(day.group(1)) <= 31:
-                return f"{base}-{int(day.group(1)):02d}"
+                with_day = f"{base}-{int(day.group(1)):02d}"
+                if not notice_date_in_future(with_day):
+                    return with_day
             return base
     return ""
 
@@ -1105,11 +1108,30 @@ def notice_clean_title(title: str) -> str:
 _DATE_CANDIDATE = re.compile(
     r"(?:20\d{2})[-/.年]\s*\d{1,2}(?:[-/.月]\s*\d{1,2})?日?|(?<![\d-])\d{1,2}-\d{1,2}(?![\d-])"
 )
+# 「日号 + 年月」跨标签两段式（如海洋学院卡片：<span>09</span><span>2026/10</span>）
+_DAY_YM_CANDIDATE = re.compile(
+    r"(?<![\d.])([0-3]?\d)\s*日?(?:\s|<[^>]+>){1,12}(20\d{2})\s*[-/.]\s*(\d{1,2})\s*月?"
+)
+
+
+def notice_date_in_future(parsed: str) -> bool:
+    """发布日期不可能晚于今天（容忍 1 天时区误差）。
+    「2026-12-19」这类未来日期来自标题里的考试/截止时间，不是发布时间。"""
+    try:
+        parts = parsed.split("-")
+        if len(parts) == 2:
+            date_value = _datetime.date(int(parts[0]), int(parts[1]), 1)
+            # 年月精度：该月任何一天都晚于今天才算未来
+            return date_value > _datetime.date.today()
+        return _datetime.date(int(parts[0]), int(parts[1]), int(parts[2])) > _datetime.date.today() + _datetime.timedelta(days=1)
+    except (ValueError, IndexError):
+        return True
 
 
 def notice_date_candidate(raw: str) -> str:
     """把单个日期候选片段解析为标准日期。纯年月片段只返回年月，
-    避免把「2026/10」的 10 误当成 10 日。月日+年的组合格式交给整窗兜底。"""
+    避免把「2026/10」的 10 误当成 10 日。月日+年的组合格式交给整窗兜底。
+    发布日期不可能晚于今天：未来日期（多为标题里的考试/截止日期）一律无效。"""
     raw = raw.strip()
     full = re.fullmatch(r"(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})日?", raw)
     chinese = re.fullmatch(r"(20\d{2})年(\d{1,2})月(\d{1,2})日?", raw)
@@ -1121,41 +1143,83 @@ def notice_date_candidate(raw: str) -> str:
         y, m = int(year_month.group(1)), int(year_month.group(2))
         if not (1 <= m <= 12):
             return ""
-        return f"{y:04d}-{m:02d}"
+        parsed = f"{y:04d}-{m:02d}"
+        return parsed if not notice_date_in_future(parsed) else ""
     y, m = int(match.group(1)), int(match.group(2))
     if not (1 <= m <= 12):
         return ""
     d = int(match.group(3))
     if not (1 <= d <= 31):
         return ""
-    return f"{y:04d}-{m:02d}-{d:02d}"
+    parsed = f"{y:04d}-{m:02d}-{d:02d}"
+    return parsed if not notice_date_in_future(parsed) else ""
 
 
-def notice_date_near(page: str, start: int, end: int) -> str:
-    """在锚点附近找日期：前窗/后窗**同权**，取距离锚点最近的候选。
-    修复「日期在标题前面」的模板（如教务处）错配到下一条日期的问题。"""
-    def nearest(lo: int, hi: int):
-        best = None
-        for match in _DATE_CANDIDATE.finditer(page, lo, hi):
-            parsed = notice_date_candidate(match.group(0))
-            if not parsed:
-                continue
-            dist = (start - match.end()) if match.end() <= start else (match.start() - end)
-            if best is None or dist < best[0]:
-                best = (dist, parsed)
-        return best
-    for lo, hi in ((max(0, start - 350), end + 350), (max(0, start - 600), end + 600)):
-        best = nearest(lo, hi)
-        if best:
-            return best[1]
-    # 兜底：整窗合并解析（兼容「日 + 年月」跨标签两段式写法）
-    for chunk in (page[end:end + 350], page[max(0, start - 350):start],
-                  page[end:end + 600], page[max(0, start - 600):start],
-                  page[start:end]):
-        parsed = notice_parse_date(re.sub(r"<[^>]+>", " ", chunk))
-        if parsed:
-            return parsed
-    return ""
+def _notice_ranked_dates(page: str, lo: int, hi: int) -> list[tuple[int, int, str, int]]:
+    """收集 [lo, hi) 内的日期候选，返回 (起点, 终点, 解析值, 优先级)。
+    优先级 0=数字完整日期（2026-10-09），1=中文完整日期（2026年10月9日），2=仅年月。"""
+    spans: list[tuple[int, int, str, int]] = []
+    for m in _DAY_YM_CANDIDATE.finditer(page, lo, hi):
+        y, mo, d = int(m.group(2)), int(m.group(3)), int(m.group(1))
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            parsed = f"{y:04d}-{mo:02d}-{d:02d}"
+            if not notice_date_in_future(parsed):
+                spans.append((m.start(), m.end(), parsed, 0))
+    for m in _DATE_CANDIDATE.finditer(page, lo, hi):
+        parsed = notice_date_candidate(m.group(0))
+        if not parsed:
+            continue
+        # 已被「日号+年月」组合候选覆盖的年月片段不再单算
+        if any(s <= m.start() and m.end() <= e for s, e, _, _ in spans):
+            continue
+        full = len(parsed) == 10
+        rank = (1 if "年" in m.group(0) else 0) if full else 2
+        spans.append((m.start(), m.end(), parsed, rank))
+    return spans
+
+
+def notice_date_block(page: str, start: int, end: int, next_anchor: int) -> tuple[int, int]:
+    """锚点所在的列表条目容器（li/dl）范围；容器不存在或异常大时退回 ±600 窗口。
+    块右界不超过下一条锚点起点（避免把下一条的日期算进来），但至少保留 end+40。"""
+    for tag in ("li", "dl", "dd"):
+        opentag = page.rfind("<" + tag, 0, start)
+        if opentag == -1:
+            continue
+        closetag = page.find("</" + tag + ">", end)
+        if closetag == -1:
+            continue
+        hi = closetag + len(tag) + 3
+        hi = min(hi, max(next_anchor, end + 40))
+        if start > opentag and hi - start <= 3000:
+            return opentag, hi
+    lo = max(0, start - 600)
+    return lo, min(len(page), max(next_anchor, end + 600))
+
+
+def notice_date_near(page: str, start: int, end: int, block_lo: int, block_hi: int) -> str:
+    """在条目块内找日期（块边界见 notice_date_block，保证不跨条目）。
+    优先取锚点**外部**距锚点最近的候选；外部没有时才看锚点内部——
+    教务处「教学运行」等模板把日期 span 和标题一起包在锚点里，而标题文本
+    自带「2026年12月12日」这类日期，此时按「数字完整 > 中文完整 > 仅年月」
+    优先、同级取更靠后者（日期 span 通常排在标题文本之后）。"""
+    outside: list[tuple[int, int, str]] = []
+    inside: list[tuple[int, int, str]] = []
+    for s, e, parsed, rank in _notice_ranked_dates(page, block_lo, block_hi):
+        if e <= start:
+            outside.append((start - e, rank, parsed))
+        elif s >= end:
+            outside.append((s - end, rank, parsed))
+        else:
+            inside.append((rank, e, parsed))
+    if outside:
+        outside.sort(key=lambda t: (t[0], t[1]))
+        return outside[0][2]
+    if inside:
+        inside.sort(key=lambda t: (t[0], -t[1]))
+        return inside[0][2]
+    # 兜底：块内整窗合并解析（「日 + 年月」「月日 + 年」等跨标签两段式）
+    chunk = page[block_lo:start] + " " + page[end:block_hi]
+    return notice_parse_date(re.sub(r"<[^>]+>", " ", chunk))
 
 
 def notice_fetch_list(url: str) -> list[dict]:
@@ -1168,7 +1232,10 @@ def notice_fetch_list(url: str) -> list[dict]:
     with urllib.request.urlopen(request, timeout=20, context=_NOTICE_TLS) as response:
         page = response.read().decode("utf-8", "replace")
     items_by_url: dict[str, dict] = {}
-    for match in _JWC_ITEM.finditer(page):
+    anchor_matches = list(_JWC_ITEM.finditer(page))
+    for idx, match in enumerate(anchor_matches):
+        next_start = anchor_matches[idx + 1].start() if idx + 1 < len(anchor_matches) else len(page)
+        block_lo, block_hi = notice_date_block(page, match.start(), match.end(), next_start)
         open_tag, inner = match.group(1), match.group(2)
         title_match = _JWC_TITLE.search(open_tag)
         if title_match:
@@ -1177,7 +1244,7 @@ def notice_fetch_list(url: str) -> list[dict]:
             title = html.unescape(re.sub(r"<[^>]+>", "", inner)).strip()
         title = re.sub(r"^[>＞\s]+", "", title).strip()  # 剥掉列表装饰符
         inner_text = html.unescape(re.sub(r"<[^>]+>", " ", inner)).strip()
-        date_match = notice_date_near(page, match.start(), match.end())
+        date_match = notice_date_near(page, match.start(), match.end(), block_lo, block_hi)
         href_match = re.search(r'href="([^"]+)"', open_tag)
         href = href_match.group(1) if href_match else ""
         if href.startswith("../"):
@@ -1187,18 +1254,27 @@ def notice_fetch_list(url: str) -> list[dict]:
         weak = False
         if not title or notice_is_junk_title(title):
             # 卡片布局：锚点本身没有可用标题（空壳或「查看更多」），标题/日期在兄弟节点里。
-            # 「查看更多」锚点通常在卡片末尾（标题在前），空壳锚点通常在卡片开头（标题在后）。
-            before = page[max(0, match.start() - 600):match.start()]
-            after = page[match.end():match.end() + 600]
-            if inner_text:
-                title = notice_title_from_window(before) or notice_title_from_window(after)
-            else:
-                title = notice_title_from_window(after) or notice_title_from_window(before)
+            # 优先在**条目块内**找（空壳锚点可能在卡片末尾如海洋学院、也可能在卡片开头），
+            # 块内找不到再退回 ±600 窗口（沿用旧约定：「查看更多」标题在前，空壳锚点标题在后）。
+            block_before = page[block_lo:match.start()]
+            block_after = page[match.end():block_hi]
+            title = notice_title_from_window(block_before) or notice_title_from_window(block_after)
+            if not title:
+                before = page[max(0, match.start() - 600):match.start()]
+                after = page[match.end():match.end() + 600]
+                if inner_text:
+                    title = notice_title_from_window(before) or notice_title_from_window(after)
+                else:
+                    title = notice_title_from_window(after) or notice_title_from_window(before)
             weak = True
         if not title:
             continue
         title = notice_clean_title(title)
         if not title or notice_is_junk_title(title):
+            continue
+        if not weak and len(title) <= 6 and not _notice_ranked_dates(page, block_lo, block_hi):
+            # 导航菜单混入：短标题（如「学院概况」「校友捐赠」）且所在条目块内没有任何日期，
+            # 是栏目导航/单页链接，不是通知
             continue
         item = {"url": origin + href, "title": title, "date": date_match, "weak": weak}
         previous = items_by_url.get(item["url"])
