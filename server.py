@@ -982,7 +982,8 @@ NOTICE_SOURCES = [
     ("col-chem", "化学化工学院", "https://chem.xmu.edu.cn/xwdt/tzgg.htm"),
     ("col-cm", "材料学院", "https://cm.xmu.edu.cn/index/tzgg.htm"),
     ("col-life", "生命科学学院", "https://life.xmu.edu.cn/xwdt/tzgg.htm"),
-    ("col-coe", "环境与生态学院", "https://coe.xmu.edu.cn/rcpy/bkspy_link/tzgg.htm"),
+    ("col-coe", "海洋与地球学院", "https://coe.xmu.edu.cn/zxzx/tzgg1.htm"),
+    ("col-cee", "环境与生态学院", "https://cee.xmu.edu.cn/xwtz/tzgg.htm"),
     ("col-informatics", "信息学院", "https://informatics.xmu.edu.cn/xszx/announces.htm"),
     ("col-ese", "电子科学与技术学院", "https://ese.xmu.edu.cn/xydt/tzgg.htm"),
     ("col-soe", "航空航天学院", "https://soe.xmu.edu.cn/xwzx/tzgg.htm"),
@@ -990,6 +991,11 @@ NOTICE_SOURCES = [
     ("col-sph", "公共卫生学院", "https://sph.xmu.edu.cn/kxyj/kydt/tzgg.htm"),
     ("col-med", "医学院", "https://med.xmu.edu.cn/djsz/tzgg.htm"),
     ("col-arch", "建筑与土木工程学院", "https://arch.xmu.edu.cn/xydt/tzgg.htm"),
+    ("col-cflc", "外文学院", "https://cflc.xmu.edu.cn/xydt/tzgg.htm"),
+    ("col-phi", "哲学系", "https://phi.xmu.edu.cn/xwgg/tzgg.htm"),
+    ("col-cpst", "物理科学与技术学院", "https://cpst.xmu.edu.cn/xwyhd1/tzgg.htm"),
+    ("col-pharm", "药学院", "https://pharm.xmu.edu.cn/index/tzgg.htm"),
+    ("col-sm", "管理学院", "https://sm.xmu.edu.cn/xsgz/tzgg.htm"),
 ]
 JWC_INTERVAL_SECONDS = 12 * 3600  # 每半天抓一次
 _JWC_DB_LOCK = threading.Lock()
@@ -1355,10 +1361,12 @@ PROFILE_CAMPUSES = ("未设置校区", "思明校区", "翔安校区", "漳州�
 
 # 编辑资料可选学院清单（与通知栏目名一致，用于「通知」板块自动匹配）
 PROFILE_COLLEGES = (
-    "中文系", "历史学系", "新闻传播学院", "艺术学院", "经济学院", "法学院",
-    "公共事务学院", "马克思主义学院", "数学科学学院", "化学化工学院", "材料学院",
-    "生命科学学院", "环境与生态学院", "信息学院", "电子科学与技术学院",
-    "航空航天学院", "能源学院", "公共卫生学院", "医学院", "建筑与土木工程学院",
+    "中文系", "历史学系", "哲学系", "外文学院", "新闻传播学院", "艺术学院",
+    "经济学院", "管理学院", "法学院", "公共事务学院", "马克思主义学院",
+    "数学科学学院", "物理科学与技术学院", "化学化工学院", "材料学院",
+    "生命科学学院", "海洋与地球学院", "环境与生态学院", "信息学院",
+    "电子科学与技术学院", "航空航天学院", "能源学院", "建筑与土木工程学院",
+    "医学院", "公共卫生学院", "药学院",
 )
 
 
