@@ -15,6 +15,7 @@ import mimetypes
 import secrets
 import shutil
 import sqlite3
+import ssl
 import sys
 import threading
 import time
@@ -712,7 +713,8 @@ def _cas_fetch_schedule(opener):
             return parser.courses, semester_match.group(1) if semester_match else ""
 
     # 2) 新版异步加载：从壳页面/JS 发现模块接口，加上通用兜底地址，逐个尝试。
-    #    POST 若遇 302 说明该应用会话未建立——跟随跳转（自动 CAS 换票）后补发一次 POST。
+    #    金智课表接口必须带 xnm(学年)/xqm(学期) 表单参数——空 body 会返回「系统异常」页。
+    #    按当前日期推导学年并按学期可能性排序枚举，全部失败再退回无参数请求兜底。
     discovered = _cas_discover_module_urls(opener, [c for c in captures if c["tag"] == "html"])
     endpoints = discovered + [url for url in JW_JSON_ENDPOINTS if url not in discovered]
     json_headers = {
@@ -721,12 +723,29 @@ def _cas_fetch_schedule(opener):
         "Accept": "application/json, text/javascript, */*; q=0.01",
         "Referer": "https://jw.xmu.edu.cn/jwapp/sys/wdkbapp/*default/index.do",
     }
+    # 学年：7 月起算新学年（2026 年 10 月 → 2026-2027 学年，xnm=2026）
+    now = time.localtime()
+    base_year = now.tm_year if now.tm_mon >= 7 else now.tm_year - 1
+    # 学期码（金智惯例）：3=秋、12=春、16=夏；按当前月份把最可能的排前面
+    if now.tm_mon in (9, 10, 11, 12, 1):
+        xqm_order = ["3", "12", "16"]
+    elif now.tm_mon in (2, 3, 4, 5, 6):
+        xqm_order = ["12", "3", "16"]
+    else:
+        xqm_order = ["16", "12", "3"]
+    combos: list = [(str(y), q) for y in (base_year, base_year - 1) for q in xqm_order]
+    combos.append(None)  # 兜底：无参数请求（兼容不要求参数的旧接口）
     semester = ""
     for endpoint in endpoints:
-        for method in ("post", "get"):
-            data = b"" if method == "post" else None
+        for combo in combos:
+            if combo:
+                data = urlencode({"xnm": combo[0], "xqm": combo[1]}).encode()
+                target = f"{endpoint}?xnm={combo[0]}&xqm={combo[1]}"
+            else:
+                data = b""
+                target = endpoint
             code, body, resp_headers, final_url = _cas_follow(
-                opener, captures, "json", method, endpoint, json_headers, data=data
+                opener, captures, "json", "post", target, json_headers, data=data
             )
             if code in (301, 302, 303, 307, 308) or code == 0:
                 continue
@@ -924,8 +943,262 @@ def init_account_db():
                 data TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS jwc_notices (
+                url TEXT PRIMARY KEY,
+                category TEXT NOT NULL,
+                title TEXT NOT NULL,
+                notice_date TEXT NOT NULL DEFAULT '',
+                first_seen TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS user_notice_prefs (
+                user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                keywords TEXT NOT NULL DEFAULT '[]',
+                categories TEXT NOT NULL DEFAULT '[]',
+                updated_at TEXT NOT NULL
+            );
             """
         )
+
+
+# ===== 官网通知抓取（教务处 4 栏目 + 各学院通知页，每半天一次） =====
+# 只存标题/栏目/日期/链接的公开信息，不抓正文；单源解析为空时跳过、不动旧数据。
+# 源格式说明：绝大多数厦大院系官网为博达 CMS，列表页条目为 info/数字/数字.htm 模式，
+# 通用解析器即可覆盖；教务处另兼容老式 detail-v2.jsp 链接。
+NOTICE_SOURCES = [
+    # (source_key, 栏目显示名, 列表页 URL)
+    ("jwc-xjxw", "教务·学籍学务", "https://jwc.xmu.edu.cn/tzgg/xjxw.htm"),
+    ("jwc-jxyx", "教务·教学运行", "https://jwc.xmu.edu.cn/tzgg/jxyx.htm"),
+    ("jwc-sjjx", "教务·实践教学", "https://jwc.xmu.edu.cn/tzgg/sjjx.htm"),
+    ("jwc-jxgg", "教务·教学改革", "https://jwc.xmu.edu.cn/tzgg/jxgg.htm"),
+    ("col-chinese", "中文系", "https://chinese.xmu.edu.cn/index/tzgg.htm"),
+    ("col-history", "历史学系", "https://history.xmu.edu.cn/tzgg.htm"),
+    ("col-comm", "新闻传播学院", "https://comm.xmu.edu.cn/xwzx/tzgg.htm"),
+    ("col-art", "艺术学院", "https://art.xmu.edu.cn/xydt/tzgg.htm"),
+    ("col-econ", "经济学院", "https://economics.xmu.edu.cn/xwzx/tzgg.htm"),
+    ("col-law", "法学院", "https://law.xmu.edu.cn/xwzx/tzgg.htm"),
+    ("col-spa", "公共事务学院", "https://spa.xmu.edu.cn/hzjl/tzgg.htm"),
+    ("col-marx", "马克思主义学院", "https://marx.xmu.edu.cn/xydt/tzgg.htm"),
+    ("col-math", "数学科学学院", "https://math.xmu.edu.cn/xydt/tzgg.htm"),
+    ("col-chem", "化学化工学院", "https://chem.xmu.edu.cn/xwdt/tzgg.htm"),
+    ("col-cm", "材料学院", "https://cm.xmu.edu.cn/index/tzgg.htm"),
+    ("col-life", "生命科学学院", "https://life.xmu.edu.cn/xwdt/tzgg.htm"),
+    ("col-coe", "环境与生态学院", "https://coe.xmu.edu.cn/rcpy/bkspy_link/tzgg.htm"),
+    ("col-informatics", "信息学院", "https://informatics.xmu.edu.cn/xszx/announces.htm"),
+    ("col-ese", "电子科学与技术学院", "https://ese.xmu.edu.cn/xydt/tzgg.htm"),
+    ("col-soe", "航空航天学院", "https://soe.xmu.edu.cn/xwzx/tzgg.htm"),
+    ("col-energy", "能源学院", "https://energy.xmu.edu.cn/xwzx/tzgg.htm"),
+    ("col-sph", "公共卫生学院", "https://sph.xmu.edu.cn/kxyj/kydt/tzgg.htm"),
+    ("col-med", "医学院", "https://med.xmu.edu.cn/djsz/tzgg.htm"),
+    ("col-arch", "建筑与土木工程学院", "https://arch.xmu.edu.cn/xydt/tzgg.htm"),
+]
+JWC_INTERVAL_SECONDS = 12 * 3600  # 每半天抓一次
+_JWC_DB_LOCK = threading.Lock()
+_JWC_ITEM = re.compile(r'(<a[^>]+href="[^"]*?info/\d+/\d+\.(?:htm|jsp)[^"]*"[^>]*>|<a[^>]+href="[^"]*?detail-v2\.jsp[^"]*"[^>]*>)(.*?)</a>', re.S)
+_JWC_TITLE = re.compile(r'title="([^"]+)"')
+# 部分院系官网证书配置不规范，抓公开列表页放宽校验（只读标题/日期/链接，不含敏感信息）
+_NOTICE_TLS = ssl._create_unverified_context()
+
+
+def jwc_connection():
+    connection = sqlite3.connect(USER_DB_PATH)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA journal_mode=WAL")
+    return connection
+
+
+def notice_parse_date(text: str) -> str:
+    """兼容多种日期写法：完整 2026-10-12；中文「2026年10月15日」；「2026/10/23」「2026.10.23」；
+    「13 / 2024-12」（日+年月）；「09-24 / 2026」（月日+年）。所有分支都校验月份 1-12，
+    防止标题里的「2026-2027学年」被误读成 2026-20 月。"""
+
+    def _norm(y, m, d=None):
+        y, m = int(y), int(m)
+        if not (1 <= m <= 12):
+            return ""
+        if d is None:
+            return f"{y:04d}-{m:02d}"
+        d = int(d)
+        if not (1 <= d <= 31):
+            return ""
+        return f"{y:04d}-{m:02d}-{d:02d}"
+
+    full = re.search(r"(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)", text)
+    if full:
+        parsed = _norm(full.group(1), full.group(2), full.group(3))
+        if parsed:
+            return parsed
+    chinese = re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日", text)
+    if chinese:
+        parsed = _norm(chinese.group(1), chinese.group(2), chinese.group(3))
+        if parsed:
+            return parsed
+    month_day = re.search(r"(?<![\d-])(\d{1,2}-\d{1,2})(?![\d-])", text)
+    year = re.search(r"(?<![\d-])(20\d{2})(?![\d-])", text)
+    if month_day and year:
+        parts = month_day.group(1).split("-")
+        parsed = _norm(year.group(1), parts[0], parts[1])
+        if parsed:
+            return parsed
+    # 年-月兜底：年月分隔符支持 - / . ，且月份必须合法（挡掉「2026-2027」这类年份区间）
+    year_month = re.search(r"(20\d{2})[-/.](\d{1,2})(?![\d.])", text)
+    if year_month:
+        base = _norm(year_month.group(1), year_month.group(2))
+        if base:
+            day = re.search(r"(?<![\d-])([0-3]?\d)(?![\d-])", text)
+            if day and 1 <= int(day.group(1)) <= 31:
+                return f"{base}-{int(day.group(1)):02d}"
+            return base
+    return ""
+
+
+_NOTICE_TITLE_OUT = re.compile(r'class="[^"]*title[^"]*"[^>]*>([^<>]{4,90})<', re.S)
+_NOTICE_TEXT = re.compile(r">\s*([^<>]{6,90})\s*<")
+_NOTICE_JUNK = ("查看更多", "更多", "MORE", "more", "首页", "上一页", "下一页", "当前位置", "概况")
+
+
+def notice_is_junk_title(text: str) -> bool:
+    if not text or text in _NOTICE_JUNK:
+        return True
+    if any(junk in text for junk in ("查看更多", "更多")) and len(text) <= 8:
+        return True
+    if text.endswith(">") or text.endswith("＞"):
+        return True
+    if re.fullmatch(r"[\d\s\-/年月日]+", text):  # 纯日期串不是标题
+        return True
+    return False
+
+
+def notice_title_from_window(window: str) -> str:
+    title_match = _NOTICE_TITLE_OUT.search(window)
+    if title_match:
+        candidate = html.unescape(title_match.group(1)).strip()
+        if not notice_is_junk_title(candidate):
+            return candidate
+    for candidate in _NOTICE_TEXT.findall(window):
+        text = html.unescape(candidate).strip()
+        if not notice_is_junk_title(text):
+            return text
+    return ""
+
+
+def notice_clean_title(title: str) -> str:
+    """压平空白；剥掉标题前混入的日期前缀（如「04.09 2026-04-09 标题」「13 2026-03 标题」）。"""
+    title = re.sub(r"\s+", " ", title).strip()
+    for _ in range(2):
+        stripped = re.sub(
+            r"^(?:\d{1,2}\.\d{1,2}|\d{4}-\d{2}(?:-\d{2})?|\d{4}年\d{1,2}月\d{1,2}日|\d{1,2}(?=\s*\d{4}-\d{2}))[.\s、]*",
+            "",
+            title,
+        )
+        if stripped == title:
+            break
+        title = stripped
+    return title.strip()
+
+
+def notice_date_near(page: str, start: int, end: int) -> str:
+    """在锚点附近（前后 350 字符优先，再退到 600）找日期，避免配到相邻条目的日期。"""
+    near_after = page[end:end + 350]
+    near_before = page[max(0, start - 350):start]
+    wide_after = page[end:end + 600]
+    wide_before = page[max(0, start - 600):start]
+    for chunk in (near_after, near_before, wide_after, wide_before, page[start:end]):
+        parsed = notice_parse_date(re.sub(r"<[^>]+>", " ", chunk))
+        if parsed:
+            return parsed
+    return ""
+
+
+def notice_fetch_list(url: str) -> list[dict]:
+    base = url.split("/", 3)
+    origin = "/".join(base[:3]) if len(base) >= 3 else ""
+    request = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; XiayuanGuide/1.0; +https://xiayuanguide.cloud)"},
+    )
+    with urllib.request.urlopen(request, timeout=20, context=_NOTICE_TLS) as response:
+        page = response.read().decode("utf-8", "replace")
+    items_by_url: dict[str, dict] = {}
+    for match in _JWC_ITEM.finditer(page):
+        open_tag, inner = match.group(1), match.group(2)
+        title_match = _JWC_TITLE.search(open_tag)
+        if title_match:
+            title = html.unescape(title_match.group(1)).strip()
+        else:
+            title = html.unescape(re.sub(r"<[^>]+>", "", inner)).strip()
+        title = re.sub(r"^[>＞\s]+", "", title).strip()  # 剥掉列表装饰符
+        inner_text = html.unescape(re.sub(r"<[^>]+>", " ", inner)).strip()
+        date_match = notice_date_near(page, match.start(), match.end())
+        href_match = re.search(r'href="([^"]+)"', open_tag)
+        href = href_match.group(1) if href_match else ""
+        if href.startswith("../"):
+            href = href[3:]
+        if not href.startswith("/"):
+            href = "/" + href
+        weak = False
+        if not title or notice_is_junk_title(title):
+            # 卡片布局：锚点本身没有可用标题（空壳或「查看更多」），标题/日期在兄弟节点里。
+            # 「查看更多」锚点通常在卡片末尾（标题在前），空壳锚点通常在卡片开头（标题在后）。
+            before = page[max(0, match.start() - 600):match.start()]
+            after = page[match.end():match.end() + 600]
+            if inner_text:
+                title = notice_title_from_window(before) or notice_title_from_window(after)
+            else:
+                title = notice_title_from_window(after) or notice_title_from_window(before)
+            weak = True
+        if not title:
+            continue
+        title = notice_clean_title(title)
+        if not title or notice_is_junk_title(title):
+            continue
+        item = {"url": origin + href, "title": title, "date": date_match, "weak": weak}
+        previous = items_by_url.get(item["url"])
+        # 同一 URL 出现多次（如加粗置顶的空壳锚点 + 正常锚点）：正常锚点的标题更可靠
+        if previous is None or (previous.get("weak") and not weak):
+            items_by_url[item["url"]] = item
+    return list(items_by_url.values())
+
+
+def notice_scrape_once() -> tuple[int, list[str]]:
+    """抓一轮全部数据源，返回 (新增条数, 失败源名)。单源失败不影响其他源。"""
+    inserted = 0
+    failures: list[str] = []
+    seen_at = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+    for source_key, category_name, url in NOTICE_SOURCES:
+        try:
+            items = notice_fetch_list(url)
+        except Exception as error:  # noqa: BLE001 抓取失败只记录，不打断
+            failures.append(category_name)
+            print(f"[notices] {category_name} 抓取失败：{error}", flush=True)
+            continue
+        if not items:
+            # 解析到 0 条视为官网可能改版：跳过该源，绝不清空旧数据
+            failures.append(category_name)
+            print(f"[notices] {category_name} 解析到 0 条，跳过本轮（官网可能改版）", flush=True)
+            continue
+        with _JWC_DB_LOCK, jwc_connection() as connection:
+            for item in items:
+                cursor = connection.execute(
+                    "INSERT OR IGNORE INTO jwc_notices (url, category, title, notice_date, first_seen) VALUES (?, ?, ?, ?, ?)",
+                    (item["url"], category_name, item["title"], item["date"], seen_at),
+                )
+                inserted += cursor.rowcount
+    return inserted, failures
+
+
+def notice_scheduler() -> None:
+    while True:
+        try:
+            inserted, failures = notice_scrape_once()
+            suffix = f"；失败源：{'、'.join(failures)}" if failures else ""
+            print(f"[notices] 定时抓取完成：新增 {inserted} 条{suffix}", flush=True)
+        except Exception as error:  # noqa: BLE001 调度循环永不退出
+            print(f"[notices] 抓取异常：{error}", flush=True)
+        time.sleep(JWC_INTERVAL_SECONDS)
+
+
+def start_jwc_scheduler() -> None:
+    threading.Thread(target=notice_scheduler, name="notice-scraper", daemon=True).start()
 
 
 def verify_stored_hash(stored: str, password: str) -> bool:
@@ -1043,6 +1316,38 @@ def account_delete_user(user_id: int):
         connection.execute("DELETE FROM user_timetables WHERE user_id = ?", (user_id,))
         connection.execute("DELETE FROM account_sessions WHERE user_id = ?", (user_id,))
         connection.execute("DELETE FROM users WHERE id = ?", (user_id,))
+
+
+def clean_notice_prefs(payload: dict) -> dict:
+    """通知订阅偏好：关键词 ≤12 个每个 ≤20 字，栏目标签 ≤24 个。"""
+    raw_keywords = payload.get("keywords")
+    keywords: list[str] = []
+    if isinstance(raw_keywords, list):
+        for keyword in raw_keywords:
+            text = str(keyword).strip()[:20]
+            if text and text not in keywords:
+                keywords.append(text)
+    keywords = keywords[:12]
+    raw_categories = payload.get("categories")
+    categories: list[str] = []
+    if isinstance(raw_categories, list):
+        for category in raw_categories:
+            text = str(category).strip()[:24]
+            if text and text not in categories:
+                categories.append(text)
+    categories = categories[:24]
+    return {"keywords": keywords, "categories": categories}
+
+
+def notice_prefs_save(user_id: int, prefs: dict) -> str:
+    now = time.strftime("%Y-%m-%dT%H:%M:%S")
+    with _ACCOUNT_DB_LOCK, account_connection() as connection:
+        connection.execute(
+            "INSERT INTO user_notice_prefs (user_id, keywords, categories, updated_at) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(user_id) DO UPDATE SET keywords = excluded.keywords, categories = excluded.categories, updated_at = excluded.updated_at",
+            (user_id, json.dumps(prefs["keywords"], ensure_ascii=False), json.dumps(prefs["categories"], ensure_ascii=False), now),
+        )
+    return now
 
 
 PROFILE_CAMPUSES = ("未设置校区", "思明校区", "翔安校区", "漳州校区")
@@ -1480,6 +1785,44 @@ class XiayuanHandler(SimpleHTTPRequestHandler):
             profile_data, updated_at = account_get_profile(user["id"])
             self.send_json({"ok": True, "profile": profile_data, "updated_at": updated_at, "has_cloud": profile_data is not None})
             return
+        if route == "/api/notices":
+            with _JWC_DB_LOCK, jwc_connection() as connection:
+                rows = connection.execute(
+                    "SELECT url, category, title, notice_date, first_seen FROM jwc_notices ORDER BY first_seen DESC, notice_date DESC LIMIT 400"
+                ).fetchall()
+                category_rows = connection.execute(
+                    "SELECT DISTINCT category FROM jwc_notices ORDER BY category"
+                ).fetchall()
+            categories = [row["category"] for row in category_rows]
+            self.send_json({"ok": True, "notices": [dict(row) for row in rows], "categories": categories})
+            return
+        if route == "/api/notices/prefs":
+            user = account_user_from_token(self.account_token())
+            if not user:
+                self.send_json({"error": "请先登录。"}, HTTPStatus.UNAUTHORIZED)
+                return
+            with _ACCOUNT_DB_LOCK, account_connection() as connection:
+                row = connection.execute(
+                    "SELECT keywords, categories, updated_at FROM user_notice_prefs WHERE user_id = ?",
+                    (user["id"],),
+                ).fetchone()
+            if not row:
+                self.send_json({"ok": True, "prefs": {"keywords": [], "categories": []}, "updated_at": None})
+                return
+            try:
+                keywords = json.loads(row["keywords"])
+                categories = json.loads(row["categories"])
+            except (ValueError, TypeError):
+                keywords, categories = [], []
+            self.send_json({"ok": True, "prefs": {"keywords": keywords, "categories": categories}, "updated_at": row["updated_at"]})
+            return
+        if route == "/api/admin/jwc-scrape":
+            if not self.is_admin():
+                self.send_json({"error": "需要管理员权限。"}, HTTPStatus.UNAUTHORIZED)
+                return
+            inserted, failures = notice_scrape_once()
+            self.send_json({"ok": True, "inserted": inserted, "failures": failures})
+            return
         super().do_GET()
 
     def _proxy_train_planner(self, upstream_path: str, data: bytes | None = None):
@@ -1852,6 +2195,20 @@ class XiayuanHandler(SimpleHTTPRequestHandler):
             updated_at = account_save_profile(user["id"], clean)
             self.send_json({"ok": True, "profile": clean, "updated_at": updated_at})
             return
+        if route == "/api/notices/prefs":
+            user = account_user_from_token(self.account_token())
+            if not user:
+                self.send_json({"error": "请先登录。"}, HTTPStatus.UNAUTHORIZED)
+                return
+            try:
+                payload = self.request_json()
+            except (ValueError, UnicodeError, json.JSONDecodeError, OverflowError):
+                self.send_json({"error": "请求格式不正确。"}, HTTPStatus.BAD_REQUEST)
+                return
+            prefs = clean_notice_prefs(payload if isinstance(payload, dict) else {})
+            updated_at = notice_prefs_save(user["id"], prefs)
+            self.send_json({"ok": True, "prefs": prefs, "updated_at": updated_at})
+            return
         if route == "/api/account/delete":
             user = account_user_from_token(self.account_token())
             if not user:
@@ -2042,5 +2399,6 @@ if __name__ == "__main__":
         print(f"已重置 {target_email} 的密码，该账号的所有登录会话已失效。")
         raise SystemExit(0)
     port = int(os.getenv("PORT", "8080"))
-    print(f"Xiayuan Guide serving on 0.0.0.0:{port}; knowledge chunks={len(KNOWLEDGE)}")
+    start_jwc_scheduler()
+    print(f"Xiayuan Guide serving on 0.0.0.0:{port}; knowledge chunks={len(KNOWLEDGE)}; notice sources={len(NOTICE_SOURCES)} scraping every {JWC_INTERVAL_SECONDS // 3600}h")
     ThreadingHTTPServer(("0.0.0.0", port), XiayuanHandler).serve_forever()

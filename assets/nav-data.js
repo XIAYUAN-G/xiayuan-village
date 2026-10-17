@@ -18,7 +18,7 @@ window.XMU_NAV = {
   sidebar: [
     { id: 'page-timetable', icon: '🗓️', monster: ['xmu-monster-calendar-v1.webp', '课表小帮手'], label: '课表', desc: '整周课表 · 导入管理', public: true },
     { id: 'page-overview', icon: '🗂️', monster: ['xmu-monster-01.webp', '校园资料入口'], label: '校园资料', desc: '全部攻略 · 按分区浏览', public: true },
-    { id: 'page-piao', icon: '🚄', monster: ['xmu-monster-08.webp', '拼票小站长'], label: '拼票', desc: '曲线回家 · 省钱还能沿途玩', public: true }
+    { id: 'page-notices', icon: '🔔', monster: ['xmu-monster-08.webp', '通知小站长'], label: '通知', desc: '教务处 · 各学院官网通知一站直达', public: true }
   ],
   groups: [
     {
